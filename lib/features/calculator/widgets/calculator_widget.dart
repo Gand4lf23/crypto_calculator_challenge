@@ -1,6 +1,9 @@
+import 'package:crypto_calculator_challenge/common/config/theme/app_colors.dart';
 import 'package:crypto_calculator_challenge/common/config/theme/app_text_styles.dart';
 import 'package:crypto_calculator_challenge/common/utils/currency_formatter.dart';
+import 'package:crypto_calculator_challenge/common/widgets/info_section.dart';
 import 'package:crypto_calculator_challenge/common/widgets/main_button.dart';
+import 'package:crypto_calculator_challenge/data/models/currency.dart';
 import 'package:crypto_calculator_challenge/features/calculator/cubit/calculator_cubit.dart';
 import 'package:crypto_calculator_challenge/features/calculator/cubit/calculator_state.dart';
 import 'package:crypto_calculator_challenge/features/calculator/widgets/convertion_bottomsheet.dart';
@@ -9,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// The calculator card — houses the currency pair selector, amount input,
+/// exchange-rate info rows, and the "Convertir" CTA.
 class CalculatorWidget extends StatefulWidget {
   const CalculatorWidget({super.key});
 
@@ -26,6 +31,8 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
 
   final TextEditingController _amountController = TextEditingController();
 
+  // ── Lifecycle ───────────────────────────────────────────────────────────────
+
   @override
   void initState() {
     super.initState();
@@ -40,7 +47,7 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
     super.dispose();
   }
 
-  // ── Sheet ──────────────────────────────────────────────────────────────────
+  // ── Sheet ───────────────────────────────────────────────────────────────────
 
   Future<void> _openSheet({required bool isTengo}) async {
     final isFiat = isTengo ? _isFiatFirst : !_isFiatFirst;
@@ -56,7 +63,7 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
     }
   }
 
-  // ── Swap ───────────────────────────────────────────────────────────────────
+  // ── Swap ────────────────────────────────────────────────────────────────────
 
   void _swap() {
     final currentState = context.read<CalculatorCubit>().state;
@@ -84,12 +91,13 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
     }
   }
 
-  // ── Calculate ──────────────────────────────────────────────────────────────
+  // ── Calculate ───────────────────────────────────────────────────────────────
 
   void _onCalculate() {
     final amount = CurrencyFormatter.parse(_amountController.text);
-    if (amount <= 0 || _tengoSelected == null || _quieroSelected == null)
+    if (amount <= 0 || _tengoSelected == null || _quieroSelected == null) {
       return;
+    }
 
     final fiatCurrency = _isFiatFirst ? _tengoSelected! : _quieroSelected!;
     final cryptoCurrency = _isFiatFirst ? _quieroSelected! : _tengoSelected!;
@@ -105,7 +113,7 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
     );
   }
 
-  // ── Error dialog ───────────────────────────────────────────────────────────
+  // ── Error dialog ────────────────────────────────────────────────────────────
 
   void _showErrorDialog(BuildContext context, String message) {
     showDialog<void>(
@@ -119,12 +127,12 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.15),
+                color: AppColors.primaryColor.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.warning_amber_rounded,
-                color: Colors.amber,
+                color: AppColors.primaryColor,
                 size: 22,
               ),
             ),
@@ -135,7 +143,7 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.redAccent,
+                  color: AppColors.error,
                 ),
               ),
             ),
@@ -148,7 +156,7 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
             child: const Text(
               'Entendido',
               style: TextStyle(
-                color: Colors.amber,
+                color: AppColors.primaryColor,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -158,19 +166,15 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
     );
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────────
+  // ── Build ───────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    final amberBorder = OutlineInputBorder(
+    final primaryBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: Colors.amber, width: 1.5),
+      borderSide: const BorderSide(color: AppColors.primaryColor, width: 1.5),
     );
 
-    // BlocListener wraps the entire card so it uses the widget's own
-    // BuildContext (guaranteed to sit below a Navigator) rather than the
-    // nested context inside BlocConsumer. addPostFrameCallback ensures the
-    // dialog is shown after the current frame settles.
     return BlocListener<CalculatorCubit, CalculatorState>(
       listenWhen: (previous, current) =>
           current is CalculatorError && previous is! CalculatorError,
@@ -185,11 +189,11 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Currency Converter ────────────────────────────────────
+              // ── Currency Converter ──────────────────────────────────
               CurrencyConverter(
                 tengoSelected: _tengoSelected,
                 quieroSelected: _quieroSelected,
@@ -200,7 +204,7 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
 
               const SizedBox(height: 16),
 
-              // ── Amount input ──────────────────────────────────────────
+              // ── Amount input ────────────────────────────────────────
               TextField(
                 controller: _amountController,
                 keyboardType: const TextInputType.numberWithOptions(
@@ -211,31 +215,25 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
                   CurrencyFormatter(),
                 ],
                 decoration: InputDecoration(
-                  // Label fijo arriba
                   labelText: 'Monto',
-                  labelStyle: TextStyle(
-                    color: Colors.amber[700],
-                    fontWeight: FontWeight.w600,
-                  ),
+                  labelStyle: AppTextStyles.fieldLabelTextStyle,
                   floatingLabelBehavior: FloatingLabelBehavior.always,
-
-                  // Prefix siempre negro
                   prefixText: _tengoSelected != null
                       ? '${_tengoSelected!.id}  '
                       : null,
                   prefixStyle: const TextStyle(
-                    color: Colors.black,
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
                   ),
-
-                  // Hint opcional (placeholder interno)
                   hintText: _tengoSelected == null ? '' : '0',
-                  hintStyle: TextStyle(color: Colors.grey[400]),
-
-                  border: amberBorder,
-                  enabledBorder: amberBorder,
-                  focusedBorder: amberBorder.copyWith(
-                    borderSide: const BorderSide(color: Colors.amber, width: 2),
+                  hintStyle: AppTextStyles.fieldHintTextStyle,
+                  border: primaryBorder,
+                  enabledBorder: primaryBorder,
+                  focusedBorder: primaryBorder.copyWith(
+                    borderSide: const BorderSide(
+                      color: AppColors.primaryColor,
+                      width: 2,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 14,
@@ -246,7 +244,7 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
 
               const SizedBox(height: 12),
 
-              // ── Info section — animated on new results ─────────────────
+              // ── Info section — animated on new results ──────────────
               BlocBuilder<CalculatorCubit, CalculatorState>(
                 builder: (context, state) {
                   String rateValue = '—';
@@ -259,9 +257,8 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
                   } else if (state is CalculatorLoaded) {
                     final tengoId = _tengoSelected?.id ?? '';
                     final quieroId = _quieroSelected?.id ?? '';
-                    final rate = state.exchangeRate; // cryptoPerFiat
+                    final rate = state.exchangeRate;
 
-                    // Show "1 Tengo = X Quiero" in the direction of the input.
                     if (_isFiatFirst) {
                       rateValue =
                           '1 $tengoId = ${CurrencyFormatter.formatValue(rate)} $quieroId';
@@ -274,9 +271,6 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
                         '${CurrencyFormatter.formatValue(state.convertedAmount)} $quieroId';
                   }
 
-                  // AnimatedSwitcher animates each new result in with a
-                  // fade + upward slide. The key changes whenever the
-                  // calculated values change (or on loading/initial).
                   return AnimatedSwitcher(
                     duration: const Duration(milliseconds: 350),
                     switchInCurve: Curves.easeOut,
@@ -296,7 +290,7 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
                         child: child,
                       ),
                     ),
-                    child: _InfoSection(
+                    child: InfoSection(
                       key: state is CalculatorLoaded
                           ? ValueKey(
                               '${state.exchangeRate}_${state.convertedAmount}',
@@ -314,7 +308,7 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
 
               const SizedBox(height: 24),
 
-              // ── Convert button ────────────────────────────────────────
+              // ── Convert button ──────────────────────────────────────
               Align(
                 alignment: Alignment.center,
                 child: FractionallySizedBox(
@@ -325,61 +319,7 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
             ],
           ),
         ),
-      ), // Card
-    ); // BlocListener
-  }
-}
-
-// ── Info section ───────────────────────────────────────────────────────────────
-
-class _InfoSection extends StatelessWidget {
-  final String rateValue;
-  final String receivesValue;
-  final String timeValue;
-
-  const _InfoSection({
-    super.key,
-    required this.rateValue,
-    required this.receivesValue,
-    required this.timeValue,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _InfoRow(label: 'Tasa estimada', value: rateValue),
-        const SizedBox(height: 8),
-        _InfoRow(label: 'Recibirás', value: receivesValue),
-        const SizedBox(height: 8),
-        _InfoRow(label: 'Tiempo estimado', value: timeValue),
-      ],
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _InfoRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: AppTextStyles.infoLabelTextStyle),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(
-            value,
-            style: AppTextStyles.infoValueTextStyle,
-            textAlign: TextAlign.end,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

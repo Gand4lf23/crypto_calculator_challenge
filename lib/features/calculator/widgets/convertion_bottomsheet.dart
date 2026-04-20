@@ -1,24 +1,12 @@
 import 'package:crypto_calculator_challenge/common/config/theme/app_text_styles.dart';
+import 'package:crypto_calculator_challenge/common/widgets/currency_icon.dart';
+import 'package:crypto_calculator_challenge/data/models/currency.dart';
 import 'package:flutter/material.dart';
 
-class Currency {
-  final String id;
-
-  /// ID used when calling the API (may differ from the short display [id]).
-  final String apiId;
-  final String name;
-  final String symbol;
-  final String flagAsset;
-
-  const Currency({
-    required this.id,
-    String? apiId,
-    required this.name,
-    required this.symbol,
-    required this.flagAsset,
-  }) : apiId = apiId ?? id;
-}
-
+/// Modal bottom sheet that displays a list of selectable currencies.
+///
+/// The static currency catalogs ([fiatCurrencies] and [cryptoCurrencies]) live
+/// here so they're co-located with the UI that presents them.
 class ConvertionBottomSheet extends StatelessWidget {
   final bool isFiat;
   final ValueChanged<Currency> onSelected;
@@ -73,6 +61,7 @@ class ConvertionBottomSheet extends StatelessWidget {
     required this.onSelected,
   });
 
+  /// Convenience factory that opens the sheet and returns the selection.
   static Future<Currency?> show(BuildContext context, {required bool isFiat}) {
     return showModalBottomSheet<Currency>(
       context: context,
@@ -95,6 +84,7 @@ class ConvertionBottomSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // ── Drag handle ────────────────────────────────────────────
           Container(
             width: 60,
             height: 4,
@@ -104,8 +94,12 @@ class ConvertionBottomSheet extends StatelessWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
+
+          // ── Section title ──────────────────────────────────────────
           Text(isFiat ? 'FIAT' : 'CRIPTO', style: AppTextStyles.titleTextStyle),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
+
+          // ── Currency list ──────────────────────────────────────────
           ...currencies.map(
             (currency) => InkWell(
               onTap: () => onSelected(currency),
@@ -116,26 +110,10 @@ class ConvertionBottomSheet extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Image.asset(
-                      currency.flagAsset,
-                      width: 40,
-                      height: 40,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, e, _) => CircleAvatar(
-                        radius: 20,
-                        backgroundColor: Colors.amber.withValues(alpha: 0.15),
-                        child: Text(
-                          currency.id.substring(
-                            0,
-                            currency.id.length.clamp(0, 2),
-                          ),
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.amber[800],
-                          ),
-                        ),
-                      ),
+                    CurrencyIcon(
+                      flagAsset: currency.flagAsset,
+                      id: currency.id,
+                      size: 40,
                     ),
                     const SizedBox(width: 12),
                     Column(
