@@ -1,3 +1,4 @@
+import 'package:crypto_calculator_challenge/common/config/theme/app_colors.dart';
 import 'package:crypto_calculator_challenge/features/calculator/cubit/calculator_cubit.dart';
 import 'package:crypto_calculator_challenge/features/calculator/di/calculator_injection.dart';
 import 'package:crypto_calculator_challenge/features/calculator/widgets/calculator_widget.dart';
@@ -9,22 +10,37 @@ class CalculatorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // Sphere diameter = 90 % of screen height.
+    final sphereDiameter = screenHeight * 1.15;
+
     return BlocProvider(
       create: (_) => sl<CalculatorCubit>(),
       child: Scaffold(
         body: Stack(
           children: [
-            // Dual-color background
-            Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: Container(color: Theme.of(context).primaryColor),
+            // ── Plain background ──────────────────────────────────────
+            Container(color: AppColors.backgroundColor),
+
+            // ── Decorative sphere ─────────────────────────────────────
+            // Positioned on the right, slightly above centre.
+            // It shows slightly less than the left half (the right half
+            // is off-screen).
+            Positioned(
+              right: -(sphereDiameter * 0.8),
+              top: (screenHeight - sphereDiameter) / 2 - screenHeight * 0.1,
+              child: Container(
+                width: sphereDiameter,
+                height: sphereDiameter,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primaryColor,
                 ),
-                Expanded(flex: 7, child: Container(color: Colors.grey[100])),
-              ],
+              ),
             ),
-            // Calculator Card centered
+
+            // ── Calculator card — centred ─────────────────────────────
             const SafeArea(
               child: Center(
                 child: SingleChildScrollView(
